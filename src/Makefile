@@ -1,7 +1,7 @@
 F90 = mpiifort
 F77 = mpiifort
 
-OPT=-c -O3 -ip -ftz -align all -qopt-report0 -qopt-report-phase=vec
+OPT=-O3 -xhost -fp-model precise
 OPT1=-O3 -ip -ftz -align all -qopt-report0 -qopt-report-phase=vec
 OPT3=-c -O3 -ip -ftz -align all -qopt-report0 -qopt-report-phase=vec
 OPT4=-c -O3 -ip -ftz -align all -qopt-report0 -qopt-report-phase=vec

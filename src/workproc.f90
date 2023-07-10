@@ -1876,6 +1876,7 @@ integer        N,NumOfEigvalsFound,IFAIL(1)
 real(dprec)    EVs(1)
 complex(dprec) W(Glob_npt_MaxAllowed),t
 real(dprec)    pen_coeff
+real(dprec), dimension(:,:), allocatable :: M_real, M_imag
 
 nfo=Glob_nfo
 nfa=Glob_nfa
@@ -1905,6 +1906,48 @@ else
 	Glob_S(i,i)=cmplx(ONE,ZERO,dprec)
   enddo
 
+  ! Important: the printing of Glob_H and Glob_S has to be done before ZHEGVX,
+  ! because this routines destroys the matrices
+  allocate(M_real(nfa, nfa))
+  allocate(M_imag(nfa, nfa))
+
+  do i = 1, nfa
+    do j = 1, nfa
+      M_real(i,j) = REAL(Glob_H(i,j))
+      M_imag(i,j) = AIMAG(Glob_H(i,j))
+    enddo
+  enddo
+
+  write(*,*) 'Real part of Hamiltonian'
+  do i = 1, nfa
+    write(*,'(<nfa>(1x,d23.16))') M_real(i,1:nfa)
+  enddo
+
+  write(*,*) 'Imaginary part of Hamiltonian'
+  do i = 1, nfa
+    write(*,'(<nfa>(1x,d23.16))') M_imag(i,1:nfa)
+  enddo
+
+  do i = 1, nfa
+    do j = 1, nfa
+      M_real(i,j) = REAL(Glob_S(i,j))
+      M_imag(i,j) = AIMAG(Glob_S(i,j))
+    enddo
+  enddo
+
+  write(*,*) 'Real part of overlap matrix'
+  do i = 1, nfa
+    write(*,'(<nfa>(1x,d23.16))') M_real(i,1:nfa)
+  enddo
+
+  write(*,*) 'Imaginary part of overlap matrix'
+  do i = 1, nfa
+    write(*,'(<nfa>(1x,d23.16))') M_imag(i,1:nfa)
+  enddo
+
+  deallocate(M_real)
+  deallocate(M_imag)
+
   if (Glob_ProcID==0) then
 	call ZHEGVX(1,'V','I','U',nfa,Glob_H,Glob_HSLeadDim,Glob_S,Glob_HSLeadDim,  &
        ZERO,ZERO,Glob_WhichEigenvalue,Glob_WhichEigenvalue,Glob_AbsTolForZHEGVX, &
@@ -1919,7 +1962,23 @@ else
   call MPI_BCAST(ErrorCode,1,MPI_INTEGER,0,MPI_COMM_WORLD,Glob_MPIErrCode)
   call MPI_BCAST(Evalue,1,MPI_DPREC,0,MPI_COMM_WORLD,Glob_MPIErrCode)
   call MPI_BCAST(Glob_c,nfa,MPI_DCOMP,0,MPI_COMM_WORLD,Glob_MPIErrCode)
+
+open(42, file='coeffs', status='new')
+do i = 1, nfa
+  write(42,*) i, REAL(Glob_c(i)), AIMAG(Glob_c(i))
+enddo
+close(42)
+
+open(42, file='gauss_param', status='new')
+do i =1, Glob_CurrBasisSize
+  write(42,'(i4, <npt>(1x,e23.16))') i, Glob_NonlinParam(1:Glob_npt,i)
+enddo
+close(42)
+
+
 endif
+
+stop
 
 !Computing gradient
 do k=1,nfo
@@ -7157,6 +7216,7 @@ do i=1,cbs
 enddo
 
 if (Glob_ProcID==0) write(*,'(1x,a29)',advance='no') 'Solving eigenvalue problem...'
+
 
 
 if (Glob_ProcID==0) then

@@ -288,7 +288,7 @@ real(dprec),parameter  ::  Glob_MaxFracOfTrialFailsAllowed=0.15*ONE
 
 !This parameter defines how many failures in energy or gradient
 !evaluation are allowed during optimization of nonlinear parameters
- integer,parameter   :: Glob_MaxEnergyFailsAllowed=5
+ integer,parameter   :: Glob_MaxEnergyFailsAllowed=200
 ! integer,parameter   :: Glob_MaxEnergyFailsAllowed=20
 
 !This parameter defines for how many times basis enlargement 
